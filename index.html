@@ -1,1 +1,109 @@
+<!DOCTYPE html>
+<html>
 
+<head>
+
+<title>Directory Search</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:40px;
+background:#f5f5f5;
+}
+
+h2{
+text-align:center;
+}
+
+#search{
+width:100%;
+max-width:400px;
+padding:12px;
+font-size:16px;
+margin:auto;
+display:block;
+margin-bottom:20px;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+.result{
+background:white;
+border-radius:6px;
+padding:15px;
+margin-bottom:10px;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.field{
+margin:3px 0;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Search Directory</h2>
+
+<input type="text" id="search" placeholder="Type name, post, district etc...">
+
+<div id="results"></div>
+
+<script>
+
+let data=[];
+
+fetch("https://opensheet.elk.sh/17DTRZUbVyZN7dA7wSsmNSTlR97OTRsUhgS9_ITAVV7A/Data")
+.then(res => res.json())
+.then(json => {
+data = json;
+display(data);
+});
+
+function display(list){
+
+let html="";
+
+list.forEach(row => {
+
+html += `<div class="result">`;
+
+for (const key in row){
+
+html += `<div class="field"><b>${key}:</b> ${row[key]}</div>`;
+
+}
+
+html += `</div>`;
+
+});
+
+document.getElementById("results").innerHTML = html;
+
+}
+
+document.getElementById("search").addEventListener("keyup",function(){
+
+let value=this.value.toLowerCase();
+
+let filtered=data.filter(row =>
+
+Object.values(row).some(val =>
+String(val).toLowerCase().includes(value)
+)
+
+);
+
+display(filtered);
+
+});
+
+</script>
+
+</body>
+
+</html>
