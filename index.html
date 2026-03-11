@@ -3,13 +3,15 @@
 
 <head>
 
-<title>Directory Search</title>
+<title>Officer Directory</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
 font-family:Arial;
-margin:40px;
+margin:30px;
 background:#f5f5f5;
 }
 
@@ -17,28 +19,41 @@ h2{
 text-align:center;
 }
 
-#search{
-width:100%;
-max-width:400px;
-padding:12px;
-font-size:16px;
-margin:auto;
-display:block;
+.controls{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
 margin-bottom:20px;
-border:1px solid #ccc;
+justify-content:center;
+}
+
+input, select{
+padding:10px;
+font-size:14px;
 border-radius:5px;
+border:1px solid #ccc;
 }
 
-.result{
+table{
+width:100%;
+border-collapse:collapse;
 background:white;
-border-radius:6px;
-padding:15px;
-margin-bottom:10px;
-box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
-.field{
-margin:3px 0;
+th{
+background:#2c3e50;
+color:white;
+padding:10px;
+cursor:pointer;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #eee;
+}
+
+tr:hover{
+background:#fafafa;
 }
 
 </style>
@@ -47,60 +62,132 @@ margin:3px 0;
 
 <body>
 
-<h2>Search Directory</h2>
+<h2>Officer Directory</h2>
 
-<input type="text" id="search" placeholder="Type name, post, district etc...">
+<div class="controls">
 
-<div id="results"></div>
+<input type="text" id="search" placeholder="Search anything...">
+
+<select id="columnFilter">
+<option value="">All Columns</option>
+</select>
+
+</div>
+
+<table>
+
+<thead>
+<tr id="tableHead"></tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+</table>
 
 <script>
 
 let data=[];
+let columns=[];
 
 fetch("https://opensheet.elk.sh/17DTRZUbVyZN7dA7wSsmNSTlR97OTRsUhgS9_ITAVV7A/Data")
-.then(res => res.json())
-.then(json => {
-data = json;
+.then(res=>res.json())
+.then(json=>{
+
+data=json;
+
+columns=Object.keys(data[0]);
+
+buildTable();
+
+buildColumnFilter();
+
 display(data);
+
 });
+
+function buildTable(){
+
+let head="";
+
+columns.forEach(col=>{
+head+=`<th onclick="sortTable('${col}')">${col}</th>`;
+});
+
+document.getElementById("tableHead").innerHTML=head;
+
+}
+
+function buildColumnFilter(){
+
+let html=`<option value="">All Columns</option>`;
+
+columns.forEach(col=>{
+html+=`<option value="${col}">${col}</option>`;
+});
+
+document.getElementById("columnFilter").innerHTML=html;
+
+}
 
 function display(list){
 
 let html="";
 
-list.forEach(row => {
+list.forEach(row=>{
 
-html += `<div class="result">`;
+html+="<tr>";
 
-for (const key in row){
+columns.forEach(col=>{
+html+=`<td>${row[col] || ""}</td>`;
+});
 
-html += `<div class="field"><b>${key}:</b> ${row[key]}</div>`;
-
-}
-
-html += `</div>`;
+html+="</tr>";
 
 });
 
-document.getElementById("results").innerHTML = html;
+document.getElementById("tableBody").innerHTML=html;
 
 }
 
-document.getElementById("search").addEventListener("keyup",function(){
+document.getElementById("search").addEventListener("keyup",filterData);
+document.getElementById("columnFilter").addEventListener("change",filterData);
 
-let value=this.value.toLowerCase();
+function filterData(){
 
-let filtered=data.filter(row =>
+let text=document.getElementById("search").value.toLowerCase();
+let column=document.getElementById("columnFilter").value;
 
-Object.values(row).some(val =>
-String(val).toLowerCase().includes(value)
-)
+let filtered=data.filter(row=>{
 
+if(column){
+
+return String(row[column]).toLowerCase().includes(text);
+
+}else{
+
+return Object.values(row).some(val=>
+String(val).toLowerCase().includes(text)
 );
+
+}
+
+});
 
 display(filtered);
 
+}
+
+function sortTable(col){
+
+data.sort((a,b)=>{
+
+return String(a[col]).localeCompare(String(b[col]));
+
 });
+
+display(data);
+
+}
 
 </script>
 
